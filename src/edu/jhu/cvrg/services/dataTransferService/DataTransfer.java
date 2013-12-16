@@ -1,10 +1,12 @@
 package edu.jhu.cvrg.services.dataTransferService;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.axiom.om.OMElement;
 
+import edu.jhu.cvrg.services.dataTransferService.dto.FileResultDTO;
 import edu.jhu.cvrg.waveform.model.ApacheCommonsFtpWrapper;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
 
@@ -142,7 +144,7 @@ public class DataTransfer {
 
 		boolean status = utils.storeLocalFiles(e);
 		
-		return utils.buildAnalysisReturn("receiveAnalysisTempFiles", status);
+		return utils.buildAnalysisReceiveReturn(status);
 	}
 	
 	public org.apache.axiom.om.OMElement sendAnalysisResultFiles(org.apache.axiom.om.OMElement e) throws Exception {
@@ -150,6 +152,7 @@ public class DataTransfer {
 
 		Map<String, OMElement> params = ServiceUtils.extractParams(e);
 		String jobId = params.get("jobID").getText();
+		long userId = Long.valueOf(params.get("userID").getText());
 		long groupId = Long.valueOf(params.get("groupID").getText());
 		long folderId = Long.valueOf(params.get("folderID").getText());
 		
@@ -159,9 +162,9 @@ public class DataTransfer {
 			fileNames[i] = strToken.nextToken();
 		}
 		
-		boolean status = utils.sendResultFiles(fileNames, groupId, folderId, jobId);
+		Set<FileResultDTO> status = utils.sendResultFiles(fileNames, groupId, folderId, jobId, userId);
 		
-		return utils.buildAnalysisReturn("sendAnalysisResultFiles", status);
+		return utils.buildAnalysisResultReturn(status);
 	}
 	
 	

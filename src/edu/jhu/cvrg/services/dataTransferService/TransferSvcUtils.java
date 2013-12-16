@@ -6,9 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -25,6 +27,7 @@ import org.apache.axis2.transport.http.HTTPConstants;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.log4j.Logger;
 
+import edu.jhu.cvrg.services.dataTransferService.dto.FileResultDTO;
 import edu.jhu.cvrg.waveform.model.ApacheCommonsFtpWrapper;
 import edu.jhu.cvrg.waveform.service.ServiceUtils;
 
@@ -671,11 +674,11 @@ public class TransferSvcUtils {
 		return omeReturn;
 	}
 	
-	public OMElement buildAnalysisReturn(String returnOMEName, boolean status){
+	public OMElement buildAnalysisReceiveReturn(boolean status){
 		OMElement omeReturn = null;
 		OMFactory omFactory = OMAbstractFactory.getOMFactory(); 	 
 		OMNamespace omNs = omFactory.createOMNamespace(sOMNameSpaceURI, sOMNameSpacePrefix);
-		omeReturn = omFactory.createOMElement(returnOMEName, omNs);
+		omeReturn = omFactory.createOMElement("receiveAnalysisTempFiles", omNs);
 		try{
 			
 			OMElement omeAnalysis = omFactory.createOMElement("status", omNs);
@@ -683,7 +686,23 @@ public class TransferSvcUtils {
 			
 			omeReturn.addChild(omeAnalysis);
 		} catch (Exception e) {
-			errorMessage = returnOMEName + " failed. "+ e.getMessage();
+			errorMessage = "receiveAnalysisTempFiles failed. "+ e.getMessage();
+			addOMEChild("status", errorMessage, omeReturn, omFactory, omNs);
+			log.error(errorMessage);
+		}
+		return omeReturn;
+	}
+	
+	
+	public OMElement buildAnalysisResultReturn(Set<FileResultDTO> status){
+		OMElement omeReturn = null;
+		OMFactory omFactory = OMAbstractFactory.getOMFactory(); 	 
+		OMNamespace omNs = omFactory.createOMNamespace(sOMNameSpaceURI, sOMNameSpacePrefix);
+		omeReturn = omFactory.createOMElement("sendAnalysisResultFiles", omNs);
+		try{
+			omeReturn.addChild(ServiceUtils.makeOutputOMElement(status, "fileList", "file", omFactory, omNs));
+		} catch (Exception e) {
+			errorMessage = "sendAnalysisResultFiles failed. "+ e.getMessage();
 			addOMEChild("status", errorMessage, omeReturn, omFactory, omNs);
 			log.error(errorMessage);
 		}
@@ -944,13 +963,17 @@ public class TransferSvcUtils {
 		return ret;
 	}
 	
-	protected boolean sendResultFiles(String[] resultFileNames, long groupId, long folderId, String jobId){
-		boolean success = false;
+	protected Set<FileResultDTO> sendResultFiles(String[] resultFileNames, long groupId, long folderId, String jobId, long userId){
+		
+		Set<FileResultDTO> result = new HashSet<FileResultDTO>();
+		
 		String errorMessage = "";
 		debugPrintln("moveFiles() from: local to: liferay");
 		if (resultFileNames != null) {
 			int iMovedCount=0;
 			try {
+				
+				Long fileId = null;
 				for(int i=0;i<resultFileNames.length;i++){
 					
 					File orign = new File(resultFileNames[i]);
@@ -958,15 +981,13 @@ public class TransferSvcUtils {
 					
 					String path = ServiceUtils.extractPath(resultFileNames[i]);
 					
-					ServiceUtils.sendToLiferay(groupId, folderId, path, orign.getName(), orign.length(), fis);
+					fileId = ServiceUtils.sendToLiferay(groupId, folderId, userId, path, orign.getName(), orign.length(), fis);
 					
-					iMovedCount++;
-				}
-				
-				success = iMovedCount == resultFileNames.length;
-				if(!success){
-					errorMessage += "sendResultFiles() failed. " + iMovedCount + " of " + resultFileNames.length + " moved successfully.";
-					log.error(errorMessage);
+					if(fileId != null){
+						iMovedCount++;
+					}
+					
+					result.add(new FileResultDTO(fileId, orign.getName()));
 				}
 				
 			} catch (Exception e) {
@@ -987,7 +1008,7 @@ public class TransferSvcUtils {
 				}
 			}
 	    }
-		return success;		
+		return result;		
 	}
 	
 	public void debugPrintLocalln(String text){

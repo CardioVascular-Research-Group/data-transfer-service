@@ -140,7 +140,7 @@ public class DataTransfer {
 	
 	
 	public org.apache.axiom.om.OMElement receiveAnalysisTempFiles(org.apache.axiom.om.OMElement e) throws Exception {
-		utils.debugPrintln("Running receiveAnalysisTempFiles()");
+		utils.debugPrintln("Running DataTransferService.DataTransfer.receiveAnalysisTempFiles()");
 
 		boolean status = utils.storeLocalFiles(e);
 		
@@ -148,7 +148,7 @@ public class DataTransfer {
 	}
 	
 	public org.apache.axiom.om.OMElement sendAnalysisResultFiles(org.apache.axiom.om.OMElement e) throws Exception {
-		utils.debugPrintln("Running receiveAnalysisTempFiles()");
+		utils.debugPrintln("Running DataTransferService.DataTransfer.sendAnalysisResultFiles()");
 
 		Map<String, OMElement> params = ServiceUtils.extractParams(e);
 		String jobId = params.get("jobID").getText();

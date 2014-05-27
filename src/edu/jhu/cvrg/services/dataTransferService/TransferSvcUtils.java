@@ -932,6 +932,7 @@ public class TransferSvcUtils {
 	protected boolean storeLocalFiles(org.apache.axiom.om.OMElement e) {
 		
 		boolean ret = false;
+		debugPrintln(" - storeLocalFiles()");
 		
 		Map<String, OMElement> params = ServiceUtils.extractParams(e);
 		Map<String, OMElement> jobs = ServiceUtils.extractParams(params.get("jobs"));
@@ -1015,9 +1016,10 @@ public class TransferSvcUtils {
 		debugPrintln("+ bSvcUtils: " + text);
 	}
 	public void debugPrintln(String text){
-		log.debug("+ " + text);
+		System.out.println("+ TransferSvcUtils: " + text);
+		log.info("+ " + text);
 	}
 	public void debugPrint(String text){
-		log.debug("+ " + text);
+		log.info("+ " + text);
 	}
 }
